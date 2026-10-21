@@ -141,7 +141,7 @@ async function executeDirectAcousticAnalysis() {
     return;
   }
   
-  // FIX: Read target file explicitly using proper array index bounds [0]
+  // FIX: Force clean single-file variable tracking array reference
   const targetTrackFile = fileInput.files[0];
   
   if (targetTrackFile.size > 25 * 1024 * 1024) {
@@ -157,7 +157,7 @@ async function executeDirectAcousticAnalysis() {
   reader.onload = async function(e) {
     const rawBase64Url = e.target.result;
     
-    // Direct link to your active Render python web backend service application instance
+    // Direct link to your awake Render server instance
     const pythonEndpoint = "https://onrender.com";
     
     const payloadContainer = {
@@ -169,7 +169,11 @@ async function executeDirectAcousticAnalysis() {
     try {
       const response = await fetch(pythonEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        mode: "cors", // Forces unblocked browser cross-domain clearance paths
+        credentials: "omit", // Prevents the browser from blocking metadata headers
+        headers: { 
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify(payloadContainer)
       });
       
