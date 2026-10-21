@@ -141,6 +141,7 @@ async function runDirectWhisperTranscription() {
     return;
   }
   
+  // FIXED SELECTION PATHWAY: Properly indexes the single target file asset row component
   const selectedFile = fileInput.files[0];
   
   if (selectedFile.size > 25 * 1024 * 1024) {
