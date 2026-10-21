@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 app = Flask(__name__)
+app.url_map.strict_slashes = False
 
 # Initialize official OpenAI SDK Client
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
