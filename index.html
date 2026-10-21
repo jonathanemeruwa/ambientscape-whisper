@@ -141,11 +141,11 @@ async function runDirectWhisperTranscription() {
     return;
   }
   
-  // FIXED SELECTION PATHWAY: Properly indexes the single target file asset row component
-  const selectedFile = fileInput.files[0];
+  // FIX: Unlocks index array component to select the active targeted file asset correctly
+  const targetAudioTrack = fileInput.files[0];
   
-  if (selectedFile.size > 25 * 1024 * 1024) {
-    alert("File dimensions are " + (selectedFile.size / (1024*1024)).toFixed(1) + "MB. Standalone Whisper capping limits targets to 25MB.");
+  if (targetAudioTrack.size > 25 * 1024 * 1024) {
+    alert("File dimensions are " + (targetAudioTrack.size / (1024*1024)).toFixed(1) + "MB. Standalone Whisper capping limits targets to 25MB.");
     return;
   }
   
@@ -160,8 +160,8 @@ async function runDirectWhisperTranscription() {
     
     const communicationPayload = {
       fileData: fullDataUrl,
-      filename: selectedFile.name,
-      mimeType: selectedFile.type
+      filename: targetAudioTrack.name,
+      mimeType: targetAudioTrack.type
     };
     
     try {
@@ -189,7 +189,7 @@ async function runDirectWhisperTranscription() {
     }
   };
   
-  reader.readAsDataURL(selectedFile);
+  reader.readAsDataURL(targetAudioTrack);
 }
 </script>
 
