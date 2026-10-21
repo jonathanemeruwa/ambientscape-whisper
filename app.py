@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 app = Flask(__name__)
+# UNIVERSAL BYPASS: Disables strict URL slash requirements for Google's architecture
 app.url_map.strict_slashes = False
 
 # Initialize official OpenAI SDK Client
@@ -16,9 +17,18 @@ client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 @app.after_request
 def apply_global_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS, HEAD"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
+
+# CATCH-ALL ROOT ROUTE: Handles incoming root validation handshakes cleanly from Google
+@app.route("/", methods=["GET", "POST", "HEAD", "OPTIONS"])
+def server_root_handshake():
+    return jsonify({
+        "success": True, 
+        "status": "online", 
+        "message": "Ambientscape OpenAI Whisper Core Engine Live"
+    }), 200
 
 @app.route("/api/v1/transcribe-audio", methods=["POST", "OPTIONS"])
 def transcribe_archival_audio():
@@ -38,9 +48,8 @@ def transcribe_archival_audio():
 
         # PATHWAY A: Ingest direct file bytes straight from the standalone browser page
         if direct_file_data:
-            # CORRECTED LOGIC: Properly strips the data URL header array components safely
             if isinstance(direct_file_data, str) and "," in direct_file_data:
-                base64_string = direct_file_data.split(",")[1]
+                base64_string = direct_file_data.split(",")[-1]
             else:
                 base64_string = direct_file_data
                 
@@ -89,3 +98,4 @@ def transcribe_archival_audio():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
