@@ -56,7 +56,7 @@ async function executeChunkedAcousticAnalysis() {
     
     const base64Data = await new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",")[-1]);
+      reader.onloadend = () => resolve(reader.result.split(",").pop());
       reader.readAsDataURL(fileSlice);
     });
     
