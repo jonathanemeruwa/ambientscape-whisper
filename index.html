@@ -69,7 +69,7 @@ async function executeChunkedAcousticAnalysis() {
       const response = await fetch(pythonEndpoint, {
         method: "POST",
         mode: "cors",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "text/plain" }, // PREFLIGHT BYPASS: Force text/plain format
         body: JSON.stringify({
           fileData: base64Data,
           filename: targetTrackFile.name,
