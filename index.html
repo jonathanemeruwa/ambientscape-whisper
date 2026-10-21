@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ambientscape Standalone Audio Transcription Engine</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #141312;
+      color: #ffffff;
+      padding: 40px 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+    h2 {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 10px;
+      margin-top: 0;
+    }
+    .field {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      color: #aaaaaa;
+    }
+    input[type="file"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      background: #ffffff;
+      color: #1a1a1a;
+      border-radius: 4px;
+      border: none;
+    }
+    button {
+      background: #ffffff;
+      color: #111111;
+      border: none;
+      padding: 15px;
+      width: 100%;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: background 0.2s;
+    }
+    button:hover { background: #e1e0da; }
+    button:disabled {
+      background: #444;
+      color: #888;
+      cursor: not-allowed;
+    }
+    .status {
+      display: none;
+      margin-top: 20px;
+      padding: 12px;
+      background: rgba(43, 114, 227, 0.1);
+      border: 1px solid rgba(43, 114, 227, 0.3);
+      border-radius: 4px;
+      font-size: 13px;
+      text-align: center;
+    }
+    .result-box {
+      display: none;
+      margin-top: 25px;
+      background: #ffffff;
+      color: #1a1a1a;
+      padding: 20px;
+      border-radius: 4px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .result-header {
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      color: #666666;
+      margin-bottom: 10px;
+      letter-spacing: 0.05em;
+    }
+    .result-content {
+      font-size: 14px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      font-family: monospace;
+      background: #f7f5f0;
+      padding: 12px;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h2>🎙️ Standalone Sound-to-Text Terminal</h2>
+  
+  <div class="field">
+    <label>Select Archival Audio Target (.mp3, .wav, under 25MB)</label>
+    <input type="file" id="audioFile" accept="audio/*">
+  </div>
+  
+  <button id="transcribeBtn" onclick="runDirectWhisperTranscription()">Extract Spoken Lyrics</button>
+  
+  <div id="statusIndicator" class="status">Streaming audio binary safely to your OpenAI Whisper cloud...</div>
+  
+  <div id="resultWrapper" class="result-box">
+    <div class="result-header">📝 Verified OpenAI Transcript Output</div>
+    <div id="textContent" class="result-content"></div>
+  </div>
+</div>
+
+<script>
+async function runDirectWhisperTranscription() {
+  const fileInput = document.getElementById("audioFile");
+  const transcribeBtn = document.getElementById("transcribeBtn");
+  const statusIndicator = document.getElementById("statusIndicator");
+  const resultWrapper = document.getElementById("resultWrapper");
+  const textContent = document.getElementById("textContent");
+  
+  if (!fileInput.files || fileInput.files.length === 0) {
+    alert("Please attach a physical audio file transfer layer first.");
+    return;
+  }
+  
+  const selectedFile = fileInput.files[0];
+  
+  if (selectedFile.size > 25 * 1024 * 1024) {
+    alert("File dimensions are " + (selectedFile.size / (1024*1024)).toFixed(1) + "MB. Standalone Whisper capping limits targets to 25MB.");
+    return;
+  }
+  
+  transcribeBtn.disabled = true;
+  statusIndicator.style.display = "block";
+  resultWrapper.style.display = "none";
+  
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    const fullDataUrl = e.target.result;
+    const pythonEndpoint = "https://onrender.com";
+    
+    const communicationPayload = {
+      fileData: fullDataUrl,
+      filename: selectedFile.name,
+      mimeType: selectedFile.type
+    };
+    
+    try {
+      const response = await fetch(pythonEndpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(communicationPayload)
+      });
+      
+      const responseData = await response.json();
+      
+      statusIndicator.style.display = "none";
+      transcribeBtn.disabled = false;
+      
+      if (responseData && responseData.success) {
+        textContent.innerText = responseData.transcribedText || "[No speech signatures detected in audio waves]";
+        resultWrapper.style.display = "block";
+      } else {
+        alert("Transcription Engine Exception: " + (responseData.error || "Unknown server response."));
+      }
+    } catch (networkError) {
+      statusIndicator.style.display = "none";
+      transcribeBtn.disabled = false;
+      alert("Network Pipeline Disruption: Could not contact your active Render application instance.");
+    }
+  };
+  
+  reader.readAsDataURL(selectedFile);
+}
+</script>
+
+</body>
+</html>
