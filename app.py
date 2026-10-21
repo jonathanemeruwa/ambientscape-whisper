@@ -1,4 +1,5 @@
 import os
+import json
 import base64
 from flask import Flask, request, jsonify
 from openai import OpenAI
@@ -8,10 +9,8 @@ load_dotenv()
 app = Flask(__name__)
 app.url_map.strict_slashes = False
 
-# Initialize official OpenAI SDK Client
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-# CORS ACCESS BRIDGE: Unlocks direct cross-domain data transmission passes
 @app.after_request
 def apply_global_cors_headers(response):
     response.headers["Access-Control-Allow-Origin"] = "*"
@@ -21,11 +20,7 @@ def apply_global_cors_headers(response):
 
 @app.route("/", methods=["GET", "POST", "HEAD", "OPTIONS"])
 def server_root_handshake():
-    return jsonify({
-        "success": True, 
-        "status": "online", 
-        "message": "Ambientscape OpenAI Whisper Core Engine Live"
-    }), 200
+    return jsonify({"success": True, "status": "online"}), 200
 
 @app.route("/api/v1/transcribe-audio", methods=["POST", "OPTIONS"])
 def transcribe_archival_audio():
@@ -33,45 +28,33 @@ def transcribe_archival_audio():
         return jsonify({"success": True}), 200
         
     try:
-        payload = request.get_json()
-        if not payload:
-            return jsonify({"success": False, "error": "Empty payload container."}), 400
-            
+        # PURE TEXT PARSER: Decodes the text/plain streaming payload safely
+        raw_text = request.get_data(as_text=True)
+        payload = json.loads(raw_text)
+        
         file_data = payload.get("fileData")
         filename = payload.get("filename", "track_stream.mp3")
         upload_id = payload.get("uploadId", "default")
         chunk_idx = payload.get("chunkIndex", 0)
         total_chunks = payload.get("totalChunks", 1)
         
-        # Safe staging directory on Render's disk
         local_filename = f"stashed_{upload_id}_{filename}"
-        
-        # Decode the pure incoming chunk bytes safely
         raw_bytes = base64.b64decode(file_data)
         
-        # "ab" mode appends the next chunk piece sequentially to the file
         with open(local_filename, "ab" if chunk_idx > 0 else "wb") as f:
             f.write(raw_bytes)
             
-        # If there are more fragments coming down the pipeline, wait for them
         if chunk_idx < total_chunks - 1:
-            return jsonify({"success": True, "message": f"Block {chunk_idx + 1} stashed successfully."}), 200
+            return jsonify({"success": True, "message": "Fragment stashed cleanly."}), 200
 
-        # FINAL CHUNK ARRIVED: Hand the completed stitched file over to OpenAI Whisper
         with open(local_filename, "rb") as audio_file:
             transcript_response = client.audio.translations.create(
                 model="whisper-1", 
                 file=audio_file
             )
         
-        # Instantly remove the audio track footprint from disk space
-        if os.path.exists(local_filename):
-            os.remove(local_filename)
-
-        return jsonify({
-            "success": True,
-            "transcribedText": transcript_response.text
-        })
+        if os.path.exists(local_filename): os.remove(local_filename)
+        return jsonify({"success": True, "transcribedText": transcript_response.text})
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
