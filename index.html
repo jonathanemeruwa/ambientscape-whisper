@@ -141,7 +141,7 @@ async function executeDirectAcousticAnalysis() {
     return;
   }
   
-  // FIX: Read target file explicitly using proper array index bounds
+  // FIX: Read target file explicitly using proper array index bounds [0]
   const targetTrackFile = fileInput.files[0];
   
   if (targetTrackFile.size > 25 * 1024 * 1024) {
