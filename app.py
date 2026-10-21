@@ -21,7 +21,6 @@ def apply_global_cors_headers(response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
     return response
 
-# CATCH-ALL ROOT ROUTE: Handles incoming root validation handshakes cleanly from Google
 @app.route("/", methods=["GET", "POST", "HEAD", "OPTIONS"])
 def server_root_handshake():
     return jsonify({
@@ -32,6 +31,7 @@ def server_root_handshake():
 
 @app.route("/api/v1/transcribe-audio", methods=["POST", "OPTIONS"])
 def transcribe_archival_audio():
+    # CORS PREFLIGHT INTERCEPTOR: Automatically approves browser safety check pings instantly
     if request.method == "OPTIONS":
         return jsonify({"success": True}), 200
         
@@ -98,4 +98,3 @@ def transcribe_archival_audio():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
