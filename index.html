@@ -9,7 +9,7 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #141312;
       color: #ffffff;
-      padding: 40px 20px;
+      padding: 20px;
       margin: 0;
     }
     .container {
@@ -118,7 +118,7 @@
     <input type="file" id="audioFile" accept="audio/*">
   </div>
   
-  <button id="transcribeBtn" onclick="runDirectWhisperTranscription()">Extract Spoken Lyrics</button>
+  <button id="transcribeBtn" onclick="executeDirectAcousticAnalysis()">Extract Spoken Lyrics</button>
   
   <div id="statusIndicator" class="status">Streaming audio binary safely to your OpenAI Whisper cloud...</div>
   
@@ -129,7 +129,7 @@
 </div>
 
 <script>
-async function runDirectWhisperTranscription() {
+async function executeDirectAcousticAnalysis() {
   const fileInput = document.getElementById("audioFile");
   const transcribeBtn = document.getElementById("transcribeBtn");
   const statusIndicator = document.getElementById("statusIndicator");
@@ -137,15 +137,15 @@ async function runDirectWhisperTranscription() {
   const textContent = document.getElementById("textContent");
   
   if (!fileInput.files || fileInput.files.length === 0) {
-    alert("Please attach a physical audio file transfer layer first.");
+    alert("Please select a physical historical audio recording track layer first.");
     return;
   }
   
-  // FIX: Unlocks index array component to select the active targeted file asset correctly
-  const targetAudioTrack = fileInput.files[0];
+  // FIX: Read target file explicitly using proper array index bounds
+  const targetTrackFile = fileInput.files[0];
   
-  if (targetAudioTrack.size > 25 * 1024 * 1024) {
-    alert("File dimensions are " + (targetAudioTrack.size / (1024*1024)).toFixed(1) + "MB. Standalone Whisper capping limits targets to 25MB.");
+  if (targetTrackFile.size > 25 * 1024 * 1024) {
+    alert("File dimensions are " + (targetTrackFile.size / (1024*1024)).toFixed(1) + "MB. Standalone Whisper capping limits targets to 25MB.");
     return;
   }
   
@@ -155,20 +155,22 @@ async function runDirectWhisperTranscription() {
   
   const reader = new FileReader();
   reader.onload = async function(e) {
-    const fullDataUrl = e.target.result;
+    const rawBase64Url = e.target.result;
+    
+    // Direct link to your active Render python web backend service application instance
     const pythonEndpoint = "https://onrender.com";
     
-    const communicationPayload = {
-      fileData: fullDataUrl,
-      filename: targetAudioTrack.name,
-      mimeType: targetAudioTrack.type
+    const payloadContainer = {
+      fileData: rawBase64Url,
+      filename: targetTrackFile.name,
+      mimeType: targetTrackFile.type
     };
     
     try {
       const response = await fetch(pythonEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(communicationPayload)
+        body: JSON.stringify(payloadContainer)
       });
       
       const responseData = await response.json();
@@ -180,16 +182,16 @@ async function runDirectWhisperTranscription() {
         textContent.innerText = responseData.transcribedText || "[No speech signatures detected in audio waves]";
         resultWrapper.style.display = "block";
       } else {
-        alert("Transcription Engine Exception: " + (responseData.error || "Unknown server response."));
+        alert("Transcription Exception: " + (responseData.error || "Malformed cloud data response."));
       }
     } catch (networkError) {
       statusIndicator.style.display = "none";
       transcribeBtn.disabled = false;
-      alert("Network Pipeline Disruption: Could not contact your active Render application instance.");
+      alert("Network Gateway Error: Connection dropped by external proxy layers.");
     }
   };
   
-  reader.readAsDataURL(targetAudioTrack);
+  reader.readAsDataURL(targetTrackFile);
 }
 </script>
 
