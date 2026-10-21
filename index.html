@@ -9,7 +9,8 @@
     .container { max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
     h2 { text-transform: uppercase; letter-spacing: 0.08em; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; margin-top: 0; }
     input[type="file"] { width: 100%; box-sizing: border-box; padding: 12px; background: #ffffff; color: #1a1a1a; border-radius: 4px; border: none; margin-bottom: 20px;}
-    button { background: #ffffff; color: #111111; border: none; padding: 15px; width: 100%; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-size: 12px; }
+    button { background: #ffffff; color: #111111; border: none; padding: 15px; width: 100%; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
+    button:hover { background: #e1e0da; }
     button:disabled { background: #444; color: #888; cursor: not-allowed; }
     .status { display: none; margin-top: 20px; padding: 12px; background: rgba(43, 114, 227, 0.1); border: 1px solid rgba(43, 114, 227, 0.3); border-radius: 4px; font-size: 13px; text-align: center; }
     .result-box { display: none; margin-top: 25px; background: #ffffff; color: #1a1a1a; padding: 20px; border-radius: 4px; }
@@ -64,6 +65,7 @@ async function executeChunkedAcousticAnalysis() {
       const response = await fetch(pythonEndpoint, {
         method: "POST",
         mode: "cors",
+        credentials: "omit",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileData: base64Data,
