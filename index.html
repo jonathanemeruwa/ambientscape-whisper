@@ -57,7 +57,11 @@ async function executeChunkedAcousticAnalysis() {
     
     const base64Data = await new Promise((resolve) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result.split(",").pop());
+      reader.onloadend = () => {
+        const resultString = reader.result;
+        const commaIndex = resultString.indexOf(",");
+        resolve(commaIndex !== -1 ? resultString.substring(commaIndex + 1) : resultString);
+      };
       reader.readAsDataURL(fileSlice);
     });
     
@@ -65,7 +69,6 @@ async function executeChunkedAcousticAnalysis() {
       const response = await fetch(pythonEndpoint, {
         method: "POST",
         mode: "cors",
-        credentials: "omit",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fileData: base64Data,
