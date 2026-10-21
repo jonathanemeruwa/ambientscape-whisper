@@ -10,8 +10,20 @@ app = Flask(__name__)
 # Initialize official OpenAI SDK Client
 client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
 
-@app.route("/api/v1/transcribe-audio", methods=["POST"])
+# NEW NATIVE SECURITY PASS: Explicitly allows global cross-domain network handshakes
+@app.after_request
+def apply_global_cors_headers(response):
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "POST, GET, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    return response
+
+@app.route("/api/v1/transcribe-audio", methods=["POST", "OPTIONS"])
 def transcribe_archival_audio():
+    # Handle automated cross-domain network validation pings instantly
+    if request.method == "OPTIONS":
+        return jsonify({"success": True}), 200
+        
     local_filename = None
     try:
         payload = request.get_json()
@@ -22,10 +34,8 @@ def transcribe_archival_audio():
         if not file_id:
             return jsonify({"success": False, "error": "Missing target file ID alignment."}), 400
 
-        # 1. DOWNLOAD THE AUDIO ASSET STREAM VIA GOOGLE DRIVE CORRIDORS
+        # Download asset stream via Google Drive corridors
         drive_url = f"https://google.com{file_id}"
-        
-        # Using a verified browser User-Agent header to bypass standard automated bot blockers
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
         }
@@ -36,13 +46,12 @@ def transcribe_archival_audio():
 
         local_filename = f"track_{file_id}.mp3"
         
-        # Stream file safely to server space chunk by chunk
         with open(local_filename, 'wb') as f:
             for file_chunk in audio_response.iter_content(chunk_size=4096):
                 if file_chunk:
                     f.write(file_chunk)
 
-        # 2. DEFENSIVE GUARDRAIL: Verify file stays safely underneath OpenAI's hard 25MB wall
+        # Defensive guardrail check
         file_size_mb = os.path.getsize(local_filename) / (1024 * 1024)
         if file_size_mb > 24.5:
             if os.path.exists(local_filename):
@@ -52,14 +61,13 @@ def transcribe_archival_audio():
                 "error": f"Audio file is {file_size_mb:.1f}MB. OpenAI limits Whisper to 25MB. Compress track format first."
             }), 400
 
-        # 3. TRANSMIT BINARY FILE STRAIGHT TO OPENAI WHISPER FOR SPEECH-TO-TEXT
+        # Transmit binary file straight to OpenAI Whisper for Speech-to-Text
         with open(local_filename, "rb") as audio_file:
             transcript_response = client.audio.translations.create(
                 model="whisper-1", 
                 file=audio_file
             )
         
-        # Clean up local file storage instantly
         if os.path.exists(local_filename):
             os.remove(local_filename)
 
@@ -74,6 +82,5 @@ def transcribe_archival_audio():
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
-    # Standard server deployment configuration parameters
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
