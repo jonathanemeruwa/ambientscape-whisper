@@ -15,6 +15,7 @@
     .status { display: none; margin-top: 20px; padding: 12px; background: rgba(43, 114, 227, 0.1); border: 1px solid rgba(43, 114, 227, 0.3); border-radius: 4px; font-size: 13px; text-align: center; }
     .result-box { display: none; margin-top: 25px; background: #ffffff; color: #1a1a1a; padding: 20px; border-radius: 4px; }
     .result-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; font-family: monospace; background: #f7f5f0; padding: 12px; border-radius: 4px; }
+    .button-group { display: flex; gap: 10px; justify-content: center; margin: 15px auto; width: 100%; max-width: 500px; }
   </style>
 </head>
 <body>
@@ -26,6 +27,7 @@
   <div id="resultWrapper" class="result-box">
     <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #666; margin-bottom: 10px;">📝 Verified OpenAI Transcript Output</div>
     <div id="textContent" class="result-content"></div>
+    <div id="actionButtonGroup" class="button-group"></div>
   </div>
 </div>
 <script>
@@ -46,8 +48,6 @@ async function executeChunkedAcousticAnalysis() {
   const CHUNK_SIZE = 1024 * 1024; // 1MB Slices
   const totalChunks = Math.ceil(targetTrackFile.size / CHUNK_SIZE);
   const uploadId = "upload_" + Date.now();
-  
-  // FIXED TARGET ENDPOINT LINK: Points explicitly to your live server machine routing loop
   const pythonEndpoint = "https://onrender.com";
   
   for (let currentChunk = 0; currentChunk < totalChunks; currentChunk++) {
@@ -71,7 +71,7 @@ async function executeChunkedAcousticAnalysis() {
       const response = await fetch(pythonEndpoint, {
         method: "POST",
         mode: "cors",
-        headers: { "Content-Type": "text/plain" }, // PREFLIGHT BYPASS: Force text/plain format
+        headers: { "Content-Type": "text/plain" },
         body: JSON.stringify({
           fileData: base64Data,
           filename: targetTrackFile.name,
@@ -83,7 +83,6 @@ async function executeChunkedAcousticAnalysis() {
       });
       
       const data = await response.json();
-      
       if (!data.success) { throw new Error(data.error || "Chunk assembly breakdown"); }
       
       if (currentChunk === totalChunks - 1) {
@@ -91,6 +90,7 @@ async function executeChunkedAcousticAnalysis() {
         transcribeBtn.disabled = false;
         textContent.innerText = data.transcribedText || "[No speech signatures detected]";
         resultWrapper.style.display = "block";
+        initializeActionButtons();
       }
     } catch (err) {
       statusIndicator.style.display = "none";
@@ -101,33 +101,65 @@ async function executeChunkedAcousticAnalysis() {
   }
 }
 
-// NATIVE CLIPBOARD INJECTION BRIDGE: Generates the specialized copy interface helper
-const createCopyBridge = setInterval(function() {
+// DYNAMIC ACTION TOOLBAR SETUP: Clipboard Copy and Audio Speech Synthesizer Nodes
+function initializeActionButtons() {
+  var actionWrapper = document.getElementById("actionButtonGroup");
   var textContainer = document.getElementById("textContent");
-  if (textContainer && !document.getElementById("copyBridgeBtn")) {
-    var copyBtn = document.createElement("button");
-    copyBtn.id = "copyBridgeBtn";
-    copyBtn.innerText = "📋 Copy Lyrics to Main Field";
-    copyBtn.style = "display: block; width: 100%; max-width: 250px; margin: 15px auto; padding: 10px 15px; background: #38bdf8; color: #141312; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-family: sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s;";
-    
-    copyBtn.onclick = function() {
-      var txt = textContainer.innerText;
-      if (txt && !txt.includes("Processing")) {
-        navigator.clipboard.writeText(txt);
-        copyBtn.innerText = "✓ Lyrics Copied!";
-        copyBtn.style.background = "#22c55e";
-        copyBtn.style.color = "#ffffff";
-        setTimeout(function() {
-          copyBtn.innerText = "📋 Copy Lyrics to Main Field";
-          copyBtn.style.background = "#38bdf8";
-          copyBtn.style.color = "#141312";
-        }, 2000);
-      }
-    };
-    textContainer.parentNode.insertBefore(copyBtn, textContainer.nextSibling);
-    clearInterval(createCopyBridge);
-  }
-}, 1000);
+  if (!actionWrapper || !textContainer) return;
+  
+  actionWrapper.innerHTML = ""; // Clean refresh layout
+  var txt = textContainer.innerText;
+  if (!txt || txt.includes("Processing")) return;
+
+  // 1. Bright Blue Clipboard Copy Button Element
+  var copyBtn = document.createElement("button");
+  copyBtn.id = "copyBridgeBtn";
+  copyBtn.innerText = "📋 Copy Lyrics";
+  copyBtn.style = "flex: 1; padding: 12px; background: #38bdf8; color: #141312; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;";
+  copyBtn.onclick = function() {
+    navigator.clipboard.writeText(txt);
+    copyBtn.innerText = "✓ Copied!";
+    copyBtn.style.background = "#22c55e";
+    copyBtn.style.color = "#ffffff";
+    setTimeout(function() {
+      copyBtn.innerText = "📋 Copy Lyrics";
+      copyBtn.style.background = "#38bdf8";
+      copyBtn.style.color = "#141312";
+    }, 2000);
+  };
+
+  // 2. Slate Grey Audio Speech Synthesis Playback Button Node
+  var speechBtn = document.createElement("button");
+  speechBtn.id = "speechPlaybackBtn";
+  speechBtn.innerText = "🔊 Read Aloud";
+  speechBtn.style = "flex: 1; padding: 12px; background: #4b5563; color: #ffffff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;";
+  
+  speechBtn.onclick = function() {
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel(); // Stop talking if clicked while speaking
+      speechBtn.innerText = "🔊 Read Aloud";
+      speechBtn.style.background = "#4b5563";
+    } else {
+      var speechPayload = new SpeechSynthesisUtterance(txt);
+      
+      // Auto-detect dialect markers to ensure natural cadence settings
+      speechPayload.lang = "en-US"; 
+      speechPayload.rate = 0.95; // Slightly measured spacing for forensic notes review
+      
+      speechPayload.onend = function() {
+        speechBtn.innerText = "🔊 Read Aloud";
+        speechBtn.style.background = "#4b5563";
+      };
+      
+      speechBtn.innerText = "🛑 Stop Speaking";
+      speechBtn.style.background = "#ef4444"; // Changes red when speaking is active
+      window.speechSynthesis.speak(speechPayload);
+    }
+  };
+
+  actionWrapper.appendChild(copyBtn);
+  actionWrapper.appendChild(speechBtn);
+}
 </script>
 </body>
 </html>
