@@ -14,22 +14,7 @@
     #transcribeBtn:disabled { background: #444; color: #888; cursor: not-allowed; }
     .status { display: none; margin-top: 10px; padding: 10px; background: rgba(43, 114, 227, 0.1); border: 1px solid rgba(43, 114, 227, 0.3); border-radius: 4px; font-size: 12px; text-align: center; }
     .result-box { display: none; margin-top: 15px; background: #ffffff; color: #1a1a1a; padding: 15px; border-radius: 4px; box-sizing: border-box; }
-    
-    /* ENHANCED MAXIMUM HEIGHT FILTER WITH SCROLLING INTERFACE BOX PARAMETERS */
-    .result-content { 
-      font-size: 13px; 
-      line-height: 1.5; 
-      white-space: pre-wrap; 
-      font-family: monospace; 
-      background: #f7f5f0; 
-      padding: 10px; 
-      border-radius: 4px; 
-      max-height: 120px; /* Restricts the text container area layout from growing too tall */
-      overflow-y: auto;   /* Generates clean internal scroll vectors */
-      border: 1px solid #ddd;
-      margin-bottom: 12px;
-    }
-    .button-group { display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 5px; }
+    .result-content { font-size: 13px; line-height: 1.5; white-space: pre-wrap; font-family: monospace; background: #f7f5f0; padding: 10px; border-radius: 4px; max-height: 120px; overflow-y: auto; border: 1px solid #ddd; margin-bottom: 5px; }
   </style>
 </head>
 <body>
@@ -41,7 +26,6 @@
   <div id="resultWrapper" class="result-box">
     <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #666; margin-bottom: 8px;">📝 Verified OpenAI Transcript Output</div>
     <div id="textContent" class="result-content"></div>
-    <div id="actionButtonGroup" class="button-group"></div>
   </div>
 </div>
 <script>
@@ -59,7 +43,7 @@ async function executeChunkedAcousticAnalysis() {
   statusIndicator.style.display = "block";
   resultWrapper.style.display = "none";
   
-  const CHUNK_SIZE = 1024 * 1024; // 1MB Slices
+  const CHUNK_SIZE = 1024 * 1024;
   const totalChunks = Math.ceil(targetTrackFile.size / CHUNK_SIZE);
   const uploadId = "upload_" + Date.now();
   const pythonEndpoint = "https://onrender.com";
@@ -102,9 +86,17 @@ async function executeChunkedAcousticAnalysis() {
       if (currentChunk === totalChunks - 1) {
         statusIndicator.style.display = "none";
         transcribeBtn.disabled = false;
-        textContent.innerText = data.transcribedText || "[No speech signatures detected]";
+        var txtOutput = data.transcribedText || "[No speech signatures detected]";
+        textContent.innerText = txtOutput;
         resultWrapper.style.display = "block";
-        initializeActionButtons();
+        
+        // IMMEDIATE OUTWARD BROADCAST TRIGGER
+        if (window.parent) {
+          window.parent.postMessage({
+            type: "AMBIENTSCAPE_AI_TRANSCRIPT",
+            transcribedText: txtOutput
+          }, "*");
+        }
       }
     } catch (err) {
       statusIndicator.style.display = "none";
@@ -115,62 +107,20 @@ async function executeChunkedAcousticAnalysis() {
   }
 }
 
-function initializeActionButtons() {
-  var actionWrapper = document.getElementById("actionButtonGroup");
+// CONTINUOUS SENSOR BROADCASTER (Backup verification check loop)
+setInterval(function() {
   var textContainer = document.getElementById("textContent");
-  if (!actionWrapper || !textContainer) return;
-  
-  actionWrapper.innerHTML = ""; 
-  var txt = textContainer.innerText;
-  if (!txt || txt.includes("Processing")) return;
-
-  // 1. Bright Blue Clipboard Copy Button Element
-  var copyBtn = document.createElement("button");
-  copyBtn.id = "copyBridgeBtn";
-  copyBtn.innerText = "📋 Copy Lyrics";
-  copyBtn.style = "flex: 1; padding: 10px; background: #38bdf8; color: #141312; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; line-height: 1.2;";
-  copyBtn.onclick = function() {
-    navigator.clipboard.writeText(txt);
-    copyBtn.innerText = "✓ Copied!";
-    copyBtn.style.background = "#22c55e";
-    copyBtn.style.color = "#ffffff";
-    setTimeout(function() {
-      copyBtn.innerText = "📋 Copy Lyrics";
-      copyBtn.style.background = "#38bdf8";
-      copyBtn.style.color = "#141312";
-    }, 2000);
-  };
-
-  // 2. Slate Grey Audio Speech Synthesis Playback Button Node
-  var speechBtn = document.createElement("button");
-  speechBtn.id = "speechPlaybackBtn";
-  speechBtn.innerText = "🔊 Read Aloud";
-  speechBtn.style = "flex: 1; padding: 10px; background: #4b5563; color: #ffffff; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; line-height: 1.2;";
-  
-  speechBtn.onclick = function() {
-    if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel();
-      speechBtn.innerText = "🔊 Read Aloud";
-      speechBtn.style.background = "#4b5563";
-    } else {
-      var speechPayload = new SpeechSynthesisUtterance(txt);
-      speechPayload.lang = "en-US"; 
-      speechPayload.rate = 0.95;
-      
-      speechPayload.onend = function() {
-        speechBtn.innerText = "🔊 Read Aloud";
-        speechBtn.style.background = "#4b5563";
-      };
-      
-      speechBtn.innerText = "🛑 Stop";
-      speechBtn.style.background = "#ef4444";
-      window.speechSynthesis.speak(speechPayload);
+  if (textContainer && textContainer.innerText.trim().length > 0 && !textContainer.innerText.includes("Processing")) {
+    if (window.parent) {
+      window.parent.postMessage({
+        type: "AMBIENTSCAPE_AI_TRANSCRIPT",
+        transcribedText: textContainer.innerText
+      }, "*");
     }
-  };
-
-  actionWrapper.appendChild(copyBtn);
-  actionWrapper.appendChild(speechBtn);
-}
+  }
+}, 1000);
 </script>
+</body>
+</html>
 </body>
 </html>
