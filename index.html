@@ -88,6 +88,14 @@ async function executeChunkedAcousticAnalysis() {
         statusIndicator.style.display = "none";
         transcribeBtn.disabled = false;
         textContent.innerText = data.transcribedText || "[No speech signatures detected]";
+                // AUTOMATED RE-ROUTING SYNC BRIDGE
+        if (window.parent) {
+          window.parent.postMessage({
+            type: "AMBIENTSCAPE_AI_TRANSCRIPT",
+            transcribedText: data.transcribedText || data.text
+          }, "*");
+        }
+
         resultWrapper.style.display = "block";
       }
     } catch (err) {
