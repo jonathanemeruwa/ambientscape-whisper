@@ -18,7 +18,7 @@ HTML_PORTAL = """
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ambientscape Standalone Audio Transcription Engine</title>
+  <title>Ambientscape Audio Transcription Engine</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #141312; color: #ffffff; padding: 20px; margin: 0; }
     .container { max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
@@ -34,7 +34,7 @@ HTML_PORTAL = """
 </head>
 <body>
 <div class="container">
-  <h2>🎙️ Standalone Sound-to-Text Terminal</h2>
+  <h2>Sound Carrier Forensic Interpreter</h2>
   <input type="file" id="audioFile" accept="audio/*">
   <button id="transcribeBtn" onclick="executeChunkedAcousticAnalysis()">Extract Spoken Lyrics</button>
   <div id="statusIndicator" class="status">Streaming audio binary safely to your OpenAI Whisper cloud...</div>
