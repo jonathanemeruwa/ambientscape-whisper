@@ -5,17 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ambientscape Standalone Audio Transcription Engine</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #141312; color: #ffffff; padding: 20px; margin: 0; }
-    .container { max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-    h2 { text-transform: uppercase; letter-spacing: 0.08em; font-size: 18px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 10px; margin-top: 0; }
-    input[type="file"] { width: 100%; box-sizing: border-box; padding: 12px; background: #ffffff; color: #1a1a1a; border-radius: 4px; border: none; margin-bottom: 20px;}
-    button { background: #ffffff; color: #111111; border: none; padding: 15px; width: 100%; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background 0.2s; }
-    button:hover { background: #e1e0da; }
-    button:disabled { background: #444; color: #888; cursor: not-allowed; }
-    .status { display: none; margin-top: 20px; padding: 12px; background: rgba(43, 114, 227, 0.1); border: 1px solid rgba(43, 114, 227, 0.3); border-radius: 4px; font-size: 13px; text-align: center; }
-    .result-box { display: none; margin-top: 25px; background: #ffffff; color: #1a1a1a; padding: 20px; border-radius: 4px; }
-    .result-content { font-size: 14px; line-height: 1.6; white-space: pre-wrap; font-family: monospace; background: #f7f5f0; padding: 12px; border-radius: 4px; }
-    .button-group { display: flex; gap: 10px; justify-content: center; margin: 15px auto; width: 100%; max-width: 500px; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #141312; color: #ffffff; padding: 15px; margin: 0; overflow: hidden; }
+    .container { max-width: 600px; margin: 0 auto; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); box-sizing: border-box; }
+    h2 { text-transform: uppercase; letter-spacing: 0.08em; font-size: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; margin-top: 0; margin-bottom: 15px; text-align: center; }
+    input[type="file"] { width: 100%; box-sizing: border-box; padding: 10px; background: #ffffff; color: #1a1a1a; border-radius: 4px; border: none; margin-bottom: 15px; font-size: 12px; }
+    #transcribeBtn { background: #ffffff; color: #111111; border: none; padding: 12px; width: 100%; font-weight: 700; text-transform: uppercase; border-radius: 4px; cursor: pointer; font-size: 11px; transition: background 0.2s; margin-bottom: 10px; }
+    #transcribeBtn:hover { background: #e1e0da; }
+    #transcribeBtn:disabled { background: #444; color: #888; cursor: not-allowed; }
+    .status { display: none; margin-top: 10px; padding: 10px; background: rgba(43, 114, 227, 0.1); border: 1px solid rgba(43, 114, 227, 0.3); border-radius: 4px; font-size: 12px; text-align: center; }
+    .result-box { display: none; margin-top: 15px; background: #ffffff; color: #1a1a1a; padding: 15px; border-radius: 4px; box-sizing: border-box; }
+    
+    /* ENHANCED MAXIMUM HEIGHT FILTER WITH SCROLLING INTERFACE BOX PARAMETERS */
+    .result-content { 
+      font-size: 13px; 
+      line-height: 1.5; 
+      white-space: pre-wrap; 
+      font-family: monospace; 
+      background: #f7f5f0; 
+      padding: 10px; 
+      border-radius: 4px; 
+      max-height: 120px; /* Restricts the text container area layout from growing too tall */
+      overflow-y: auto;   /* Generates clean internal scroll vectors */
+      border: 1px solid #ddd;
+      margin-bottom: 12px;
+    }
+    .button-group { display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -25,7 +39,7 @@
   <button id="transcribeBtn" onclick="executeChunkedAcousticAnalysis()">Extract Spoken Lyrics</button>
   <div id="statusIndicator" class="status">Streaming audio binary safely to your OpenAI Whisper cloud...</div>
   <div id="resultWrapper" class="result-box">
-    <div style="font-size: 11px; text-transform: uppercase; font-weight: 700; color: #666; margin-bottom: 10px;">📝 Verified OpenAI Transcript Output</div>
+    <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #666; margin-bottom: 8px;">📝 Verified OpenAI Transcript Output</div>
     <div id="textContent" class="result-content"></div>
     <div id="actionButtonGroup" class="button-group"></div>
   </div>
@@ -101,13 +115,12 @@ async function executeChunkedAcousticAnalysis() {
   }
 }
 
-// DYNAMIC ACTION TOOLBAR SETUP: Clipboard Copy and Audio Speech Synthesizer Nodes
 function initializeActionButtons() {
   var actionWrapper = document.getElementById("actionButtonGroup");
   var textContainer = document.getElementById("textContent");
   if (!actionWrapper || !textContainer) return;
   
-  actionWrapper.innerHTML = ""; // Clean refresh layout
+  actionWrapper.innerHTML = ""; 
   var txt = textContainer.innerText;
   if (!txt || txt.includes("Processing")) return;
 
@@ -115,7 +128,7 @@ function initializeActionButtons() {
   var copyBtn = document.createElement("button");
   copyBtn.id = "copyBridgeBtn";
   copyBtn.innerText = "📋 Copy Lyrics";
-  copyBtn.style = "flex: 1; padding: 12px; background: #38bdf8; color: #141312; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;";
+  copyBtn.style = "flex: 1; padding: 10px; background: #38bdf8; color: #141312; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; line-height: 1.2;";
   copyBtn.onclick = function() {
     navigator.clipboard.writeText(txt);
     copyBtn.innerText = "✓ Copied!";
@@ -132,27 +145,25 @@ function initializeActionButtons() {
   var speechBtn = document.createElement("button");
   speechBtn.id = "speechPlaybackBtn";
   speechBtn.innerText = "🔊 Read Aloud";
-  speechBtn.style = "flex: 1; padding: 12px; background: #4b5563; color: #ffffff; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;";
+  speechBtn.style = "flex: 1; padding: 10px; background: #4b5563; color: #ffffff; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px; line-height: 1.2;";
   
   speechBtn.onclick = function() {
     if (window.speechSynthesis.speaking) {
-      window.speechSynthesis.cancel(); // Stop talking if clicked while speaking
+      window.speechSynthesis.cancel();
       speechBtn.innerText = "🔊 Read Aloud";
       speechBtn.style.background = "#4b5563";
     } else {
       var speechPayload = new SpeechSynthesisUtterance(txt);
-      
-      // Auto-detect dialect markers to ensure natural cadence settings
       speechPayload.lang = "en-US"; 
-      speechPayload.rate = 0.95; // Slightly measured spacing for forensic notes review
+      speechPayload.rate = 0.95;
       
       speechPayload.onend = function() {
         speechBtn.innerText = "🔊 Read Aloud";
         speechBtn.style.background = "#4b5563";
       };
       
-      speechBtn.innerText = "🛑 Stop Speaking";
-      speechBtn.style.background = "#ef4444"; // Changes red when speaking is active
+      speechBtn.innerText = "🛑 Stop";
+      speechBtn.style.background = "#ef4444";
       window.speechSynthesis.speak(speechPayload);
     }
   };
