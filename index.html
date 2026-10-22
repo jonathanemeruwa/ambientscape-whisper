@@ -106,6 +106,24 @@ async function executeChunkedAcousticAnalysis() {
     }
   }
 }
+// UNIVERSAL RE-ROUTING GATEWAY: Fires the cross-talk signal the second text lands on screen
+const textObserver = new MutationObserver(function() {
+  var transcriptText = document.getElementById("textContent") ? document.getElementById("textContent").innerText : "";
+  if (transcriptText && transcriptText.trim().length > 0 && !transcriptText.includes("Processing")) {
+    if (window.parent) {
+      window.parent.postMessage({
+        type: "AMBIENTSCAPE_AI_TRANSCRIPT",
+        transcribedText: transcriptText
+      }, "*");
+    }
+  }
+});
+
+// Attaches the sensor directly to your screen text output box container
+if (document.getElementById("textContent")) {
+  textObserver.observe(document.getElementById("textContent"), { childList: true, characterData: true, subtree: true });
+}
+  
 </script>
 </body>
 </html>
