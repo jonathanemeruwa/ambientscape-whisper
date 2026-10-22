@@ -14,7 +14,8 @@
     #transcribeBtn:disabled { background: #444; color: #888; cursor: not-allowed; }
     .status { display: none; margin-top: 10px; padding: 10px; background: rgba(43, 114, 227, 0.1); border: 1px solid rgba(43, 114, 227, 0.3); border-radius: 4px; font-size: 12px; text-align: center; }
     .result-box { display: none; margin-top: 15px; background: #ffffff; color: #1a1a1a; padding: 15px; border-radius: 4px; box-sizing: border-box; }
-    .result-content { font-size: 13px; line-height: 1.5; white-space: pre-wrap; font-family: monospace; background: #f7f5f0; padding: 10px; border-radius: 4px; max-height: 120px; overflow-y: auto; border: 1px solid #ddd; margin-bottom: 5px; }
+    .result-content { font-size: 13px; line-height: 1.5; white-space: pre-wrap; font-family: monospace; background: #f7f5f0; padding: 10px; border-radius: 4px; max-height: 110px; overflow-y: auto; border: 1px solid #ddd; margin-bottom: 10px; }
+    .button-group { display: flex; gap: 10px; justify-content: center; width: 100%; margin-top: 5px; }
   </style>
 </head>
 <body>
@@ -26,6 +27,10 @@
   <div id="resultWrapper" class="result-box">
     <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #666; margin-bottom: 8px;">📝 Verified OpenAI Transcript Output</div>
     <div id="textContent" class="result-content"></div>
+    <div class="button-group">
+      <button id="inlineCopyBtn" onclick="copyLyricsText()" style="flex: 1; padding: 10px; background: #38bdf8; color: #141312; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px;">📋 Copy Lyrics</button>
+      <button id="inlineSpeechBtn" onclick="playLyricsSpeech()" style="flex: 1; padding: 10px; background: #4b5563; color: #ffffff; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px;">🔊 Read Aloud</button>
+    </div>
   </div>
 </div>
 <script>
@@ -86,17 +91,8 @@ async function executeChunkedAcousticAnalysis() {
       if (currentChunk === totalChunks - 1) {
         statusIndicator.style.display = "none";
         transcribeBtn.disabled = false;
-        var txtOutput = data.transcribedText || "[No speech signatures detected]";
-        textContent.innerText = txtOutput;
+        textContent.innerText = data.transcribedText || "[No speech signatures detected]";
         resultWrapper.style.display = "block";
-        
-        // IMMEDIATE OUTWARD BROADCAST TRIGGER
-        if (window.parent) {
-          window.parent.postMessage({
-            type: "AMBIENTSCAPE_AI_TRANSCRIPT",
-            transcribedText: txtOutput
-          }, "*");
-        }
       }
     } catch (err) {
       statusIndicator.style.display = "none";
@@ -107,20 +103,38 @@ async function executeChunkedAcousticAnalysis() {
   }
 }
 
-// CONTINUOUS SENSOR BROADCASTER (Backup verification check loop)
-setInterval(function() {
-  var textContainer = document.getElementById("textContent");
-  if (textContainer && textContainer.innerText.trim().length > 0 && !textContainer.innerText.includes("Processing")) {
-    if (window.parent) {
-      window.parent.postMessage({
-        type: "AMBIENTSCAPE_AI_TRANSCRIPT",
-        transcribedText: textContainer.innerText
-      }, "*");
-    }
+function copyLyricsText() {
+  var txt = document.getElementById("textContent").innerText;
+  var btn = document.getElementById("inlineCopyBtn");
+  navigator.clipboard.writeText(txt);
+  btn.innerText = "✓ Copied!";
+  btn.style.background = "#22c55e";
+  btn.style.color = "#ffffff";
+  setTimeout(function() {
+    btn.innerText = "📋 Copy Lyrics";
+    btn.style.background = "#38bdf8";
+    btn.style.color = "#141312";
+  }, 2000);
+}
+
+function playLyricsSpeech() {
+  var txt = document.getElementById("textContent").innerText;
+  var btn = document.getElementById("inlineSpeechBtn");
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    btn.innerText = "🔊 Read Aloud";
+    btn.style.background = "#4b5563";
+  } else {
+    var payload = new SpeechSynthesisUtterance(txt);
+    payload.lang = "en-US";
+    payload.rate = 0.95;
+    payload.onend = function() {
+      btn.innerText = "🔊 Read Aloud";
+      btn.style.background = "#4b5563";
+    };
+    btn.innerText = "🛑 Stop";
+    btn.style.background = "#ef4444";
+    window.speechSynthesis.speak(payload);
   }
-}, 1000);
+}
 </script>
-</body>
-</html>
-</body>
-</html>
