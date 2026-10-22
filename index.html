@@ -46,6 +46,8 @@ async function executeChunkedAcousticAnalysis() {
   const CHUNK_SIZE = 1024 * 1024; // 1MB Slices
   const totalChunks = Math.ceil(targetTrackFile.size / CHUNK_SIZE);
   const uploadId = "upload_" + Date.now();
+  
+  // FIXED TARGET ENDPOINT LINK: Points explicitly to your live server machine routing loop
   const pythonEndpoint = "https://onrender.com";
   
   for (let currentChunk = 0; currentChunk < totalChunks; currentChunk++) {
@@ -88,14 +90,6 @@ async function executeChunkedAcousticAnalysis() {
         statusIndicator.style.display = "none";
         transcribeBtn.disabled = false;
         textContent.innerText = data.transcribedText || "[No speech signatures detected]";
-                // AUTOMATED RE-ROUTING SYNC BRIDGE
-        if (window.parent) {
-          window.parent.postMessage({
-            type: "AMBIENTSCAPE_AI_TRANSCRIPT",
-            transcribedText: data.transcribedText || data.text
-          }, "*");
-        }
-
         resultWrapper.style.display = "block";
       }
     } catch (err) {
@@ -106,24 +100,34 @@ async function executeChunkedAcousticAnalysis() {
     }
   }
 }
-// UNIVERSAL RE-ROUTING GATEWAY: Fires the cross-talk signal the second text lands on screen
-const textObserver = new MutationObserver(function() {
-  var transcriptText = document.getElementById("textContent") ? document.getElementById("textContent").innerText : "";
-  if (transcriptText && transcriptText.trim().length > 0 && !transcriptText.includes("Processing")) {
-    if (window.parent) {
-      window.parent.postMessage({
-        type: "AMBIENTSCAPE_AI_TRANSCRIPT",
-        transcribedText: transcriptText
-      }, "*");
-    }
-  }
-});
 
-// Attaches the sensor directly to your screen text output box container
-if (document.getElementById("textContent")) {
-  textObserver.observe(document.getElementById("textContent"), { childList: true, characterData: true, subtree: true });
-}
-  
+// NATIVE CLIPBOARD INJECTION BRIDGE: Generates the specialized copy interface helper
+const createCopyBridge = setInterval(function() {
+  var textContainer = document.getElementById("textContent");
+  if (textContainer && !document.getElementById("copyBridgeBtn")) {
+    var copyBtn = document.createElement("button");
+    copyBtn.id = "copyBridgeBtn";
+    copyBtn.innerText = "📋 Copy Lyrics to Main Field";
+    copyBtn.style = "display: block; width: 100%; max-width: 250px; margin: 15px auto; padding: 10px 15px; background: #38bdf8; color: #141312; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; font-family: sans-serif; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; transition: background 0.2s;";
+    
+    copyBtn.onclick = function() {
+      var txt = textContainer.innerText;
+      if (txt && !txt.includes("Processing")) {
+        navigator.clipboard.writeText(txt);
+        copyBtn.innerText = "✓ Lyrics Copied!";
+        copyBtn.style.background = "#22c55e";
+        copyBtn.style.color = "#ffffff";
+        setTimeout(function() {
+          copyBtn.innerText = "📋 Copy Lyrics to Main Field";
+          copyBtn.style.background = "#38bdf8";
+          copyBtn.style.color = "#141312";
+        }, 2000);
+      }
+    };
+    textContainer.parentNode.insertBefore(copyBtn, textContainer.nextSibling);
+    clearInterval(createCopyBridge);
+  }
+}, 1000);
 </script>
 </body>
 </html>
