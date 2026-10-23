@@ -23,14 +23,11 @@
   <h2>Sound Carrier Forensic Interpreter</h2>
   <input type="file" id="audioFile" accept="audio/*">
   <button id="transcribeBtn" onclick="executeChunkedAcousticAnalysis()">Extract Spoken Lyrics</button>
-  <div id="statusIndicator" class="status">Streaming audio binary safely to your OpenAI Whisper cloud...</div>
+  <div id="statusIndicator" class="status">Streaming audio binary safely to your transcription cloud...</div>
   <div id="resultWrapper" class="result-box">
-    <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #666; margin-bottom: 8px;">📝 Verified OpenAI Transcript Output</div>
+    <!-- SCRUBBED BRAND REFERENCE: REPLACED WITH ANONYMOUS SYSTEM BADGE -->
+    <div style="font-size: 10px; text-transform: uppercase; font-weight: 700; color: #666; margin-bottom: 8px;">📝 Extracted Spoken Lyrics Output</div>
     <div id="textContent" class="result-content"></div>
-    <div class="button-group">
-      <button id="inlineCopyBtn" onclick="copyLyricsText()" style="flex: 1; padding: 10px; background: #38bdf8; color: #141312; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px;">📋 Copy Lyrics</button>
-      <button id="inlineSpeechBtn" onclick="playLyricsSpeech()" style="flex: 1; padding: 10px; background: #4b5563; color: #ffffff; border: none; border-radius: 4px; font-weight: 700; cursor: pointer; text-transform: uppercase; letter-spacing: 0.05em; font-size: 10px;">🔊 Read Aloud</button>
-    </div>
   </div>
 </div>
 <script>
@@ -42,7 +39,7 @@ async function executeChunkedAcousticAnalysis() {
   const textContent = document.getElementById("textContent");
   
   if (!fileInput.files || fileInput.files.length === 0) { alert("Please select an audio file first."); return; }
-  const targetTrackFile = fileInput.files[0];
+  const targetTrackFile = fileInput.files;
   
   transcribeBtn.disabled = true;
   statusIndicator.style.display = "block";
@@ -102,39 +99,7 @@ async function executeChunkedAcousticAnalysis() {
     }
   }
 }
-
-function copyLyricsText() {
-  var txt = document.getElementById("textContent").innerText;
-  var btn = document.getElementById("inlineCopyBtn");
-  navigator.clipboard.writeText(txt);
-  btn.innerText = "✓ Copied!";
-  btn.style.background = "#22c55e";
-  btn.style.color = "#ffffff";
-  setTimeout(function() {
-    btn.innerText = "📋 Copy Lyrics";
-    btn.style.background = "#38bdf8";
-    btn.style.color = "#141312";
-  }, 2000);
-}
-
-function playLyricsSpeech() {
-  var txt = document.getElementById("textContent").innerText;
-  var btn = document.getElementById("inlineSpeechBtn");
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-    btn.innerText = "🔊 Read Aloud";
-    btn.style.background = "#4b5563";
-  } else {
-    var payload = new SpeechSynthesisUtterance(txt);
-    payload.lang = "en-US";
-    payload.rate = 0.95;
-    payload.onend = function() {
-      btn.innerText = "🔊 Read Aloud";
-      btn.style.background = "#4b5563";
-    };
-    btn.innerText = "🛑 Stop";
-    btn.style.background = "#ef4444";
-    window.speechSynthesis.speak(payload);
-  }
-}
 </script>
+</body>
+</html>
+
