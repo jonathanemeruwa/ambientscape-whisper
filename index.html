@@ -48,7 +48,9 @@ async function executeChunkedAcousticAnalysis() {
   const CHUNK_SIZE = 1024 * 1024;
   const totalChunks = Math.ceil(targetTrackFile.size / CHUNK_SIZE);
   const uploadId = "upload_" + Date.now();
-  const pythonEndpoint = "https://onrender.com";
+  
+  // LIVE ENDPOINT RESTORED: Directly routes audio packets to your personal server routing cluster
+  const pythonEndpoint = "https://ambientscape-whisper.onrender.com";
   
   for (let currentChunk = 0; currentChunk < totalChunks; currentChunk++) {
     const start = currentChunk * CHUNK_SIZE;
@@ -102,4 +104,3 @@ async function executeChunkedAcousticAnalysis() {
 </script>
 </body>
 </html>
-
