@@ -171,7 +171,14 @@ def transcribe_archival_audio():
         except Exception as emergency_error:
             print(f"[RECOVERY MATRIX INTERVENTION] Routing down standard Google path: {emergency_error}")
 
-    return jsonify({"success": True, "transcribedText": transcript_response.text})
+    import base64
+    audio_base64 = base64.b64encode(network_response.content).decode('utf-8') if 'network_response' in locals() and network_response.status_code == 200 else None
+
+    return jsonify({
+        "success": True, 
+        "transcribedText": transcript_response.text,
+        "audioData": audio_base64
+    })
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
