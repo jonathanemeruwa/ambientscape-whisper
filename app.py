@@ -153,12 +153,12 @@ def transcribe_archival_audio():
             )
         
         if os.path.exists(local_filename): os.remove(local_filename)
-    # PAN-AFRICAN TRIPLE-TIER VOCAL SYNTHESIS MATRIX (ELEVENLABS API)
-      elevenlabs_token = os.environ.get("ELEVENLABS_API_KEY")
-      destination_language = request.json.get("targetLanguage", "yo")
-      african_languages = ["yo", "sw", "zu", "xh", "ha", "af", "st", "ln", "sn", "ny", "am", "so", "om", "ar"]
+       # PAN-AFRICAN TRIPLE-TIER VOCAL SYNTHESIS MATRIX (ELEVENLABS API)
+    elevenlabs_token = os.environ.get("ELEVENLABS_API_KEY")
+    destination_language = request.json.get("targetLanguage", "yo")
+    african_languages = ["yo", "sw", "zu", "xh", "ha", "af", "st", "ln", "sn", "ny", "am", "so", "om", "ar"]
     
-      if elevenlabs_token and destination_language in african_languages and transcript_response.text:
+    if elevenlabs_token and destination_language in african_languages and transcript_response.text:
         voice_profile_id = "21m00Tcm4TlvDq8ikWAM"
         target_api_url = f"https://elevenlabs.io{voice_profile_id}"
         
@@ -179,7 +179,8 @@ def transcribe_archival_audio():
         except Exception as emergency_error:
             print(f"[RECOVERY MATRIX INTERVENTION] Routing down standard Google path: {emergency_error}")
             
-        return jsonify({"success": True, "transcribedText": transcript_response.text})
+    return jsonify({"success": True, "transcribedText": transcript_response.text})
+
         return jsonify({"success": False, "error": str(e)}), 500
 
 if __name__ == "__main__":
