@@ -155,7 +155,7 @@ def transcribe_archival_audio():
         if os.path.exists(local_filename): os.remove(local_filename)
     # PAN-AFRICAN TRIPLE-TIER VOCAL SYNTHESIS MATRIX (ELEVENLABS API)
       elevenlabs_token = os.environ.get("ELEVENLABS_API_KEY")
-      destination_language = payload.get("targetLanguage", "yo")
+      destination_language = request.json.get("targetLanguage", "yo")
       african_languages = ["yo", "sw", "zu", "xh", "ha", "af", "st", "ln", "sn", "ny", "am", "so", "om", "ar"]
     
       if elevenlabs_token and destination_language in african_languages and transcript_response.text:
