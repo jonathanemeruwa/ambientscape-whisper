@@ -143,25 +143,29 @@ def transcribe_archival_audio():
             
         if chunk_idx < total_chunks - 1:
             return jsonify({"success": True, "message": "Fragment stashed cleanly."}), 200
-
-        with open(local_filename, "rb") as audio_file:
+    try:
+        with open(local_filename, "rb") as file_audio:
             transcript_response = client.audio.translations.create(
-                model="whisper-1", 
-                file=audio_file,
+                model="whisper-1",
+                file=file_audio,
                 prompt="Translate this historical field recording cleanly into standard conversational English text."
-
             )
-        
-        if os.path.exists(local_filename): os.remove(local_filename)
-       # PAN-AFRICAN TRIPLE-TIER VOCAL SYNTHESIS MATRIX (ELEVENLABS API)
+    except Exception as e:
+        print(f"[ERROR] OpenAI Transcription phase encountered an issue: {e}")
+        return jsonify({"success": False, "error": str(e)}), 500
+
+    if os.path.exists(local_filename): 
+        os.remove(local_filename)
+
+    # PAN-AFRICAN TRIPLE-TIER VOCAL SYNTHESIS MATRIX (ELEVENLABS API)
     elevenlabs_token = os.environ.get("ELEVENLABS_API_KEY")
     destination_language = request.json.get("targetLanguage", "yo")
     african_languages = ["yo", "sw", "zu", "xh", "ha", "af", "st", "ln", "sn", "ny", "am", "so", "om", "ar"]
-    
+
     if elevenlabs_token and destination_language in african_languages and transcript_response.text:
         voice_profile_id = "21m00Tcm4TlvDq8ikWAM"
         target_api_url = f"https://elevenlabs.io{voice_profile_id}"
-        
+
         request_payload = {
             "text": transcript_response.text,
             "model_id": "eleven_multilingual_v2",
@@ -178,10 +182,8 @@ def transcribe_archival_audio():
                 print("[SUCCESS] ElevenLabs vocal synthesis stream captured flawlessly.")
         except Exception as emergency_error:
             print(f"[RECOVERY MATRIX INTERVENTION] Routing down standard Google path: {emergency_error}")
-            
-    return jsonify({"success": True, "transcribedText": transcript_response.text})
 
-        return jsonify({"success": False, "error": str(e)}), 500
+    return jsonify({"success": True, "transcribedText": transcript_response.text})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
