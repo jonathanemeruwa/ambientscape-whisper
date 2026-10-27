@@ -147,7 +147,9 @@ def transcribe_archival_audio():
         with open(local_filename, "rb") as audio_file:
             transcript_response = client.audio.translations.create(
                 model="whisper-1", 
-                file=audio_file
+                file=audio_file,
+                prompt="Translate this historical field recording cleanly into standard conversational English text."
+
             )
         
         if os.path.exists(local_filename): os.remove(local_filename)
