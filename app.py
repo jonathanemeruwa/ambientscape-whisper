@@ -128,10 +128,22 @@ def transcribe_archival_audio():
     Handles noise-isolated archival audio extraction via OpenAI Whisper, formats payload text,
     and applies a Pan-African triple-tier voice fallback matrix natively via ElevenLabs.
     """
+        import base64
     payload = request.json if request.is_json else {}
-    local_filename = payload.get("filename", "audio_cache.mp3")
     destination_language = payload.get("targetLanguage", "yo")
+    local_filename = "audio_cache.mp3"
 
+    # Decode and reconstruct the raw audio data block sent from Google
+    raw_audio_string = payload.get("audio_data", "")
+    if not raw_audio_string:
+        return jsonify({"success": False, "error": "No raw audio binary bits detected in request"}), 400
+
+    try:
+        # Rebuild the file on Render's disk storage matrix safely
+        with open(local_filename, "wb") as fh:
+            fh.write(base64.b64decode(raw_audio_string))
+    except Exception as save_err:
+        return jsonify({"success": False, "error": f"Failed to cache binary stream: {str(save_err)}"}), 500
     try:
         with open(local_filename, "rb") as file_audio:
             transcript_response = client.audio.translations.create(
