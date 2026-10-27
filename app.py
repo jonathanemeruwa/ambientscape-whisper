@@ -124,25 +124,14 @@ def server_root_handshake():
 
 @app.route("/api/v1/transcribe-audio", methods=["POST", "OPTIONS"])
 def transcribe_archival_audio():
-    if request.method == "OPTIONS":
-        return jsonify({"success": True}), 200
-        
-    try:
-        payload = request.get_json() or {}
-        file_data = payload.get("fileData")
-        filename = payload.get("filename", "track_stream.mp3")
-        upload_id = payload.get("uploadId", "default")
-        chunk_idx = payload.get("chunkIndex", 0)
-        total_chunks = payload.get("totalChunks", 1)
-        
-        local_filename = f"stashed_{upload_id}_{filename}"
-        raw_bytes = base64.b64decode(file_data)
-        
-        with open(local_filename, "ab" if chunk_idx > 0 else "wb") as f:
-            f.write(raw_bytes)
-            
-        if chunk_idx < total_chunks - 1:
-            return jsonify({"success": True, "message": "Fragment stashed cleanly."}), 200
+    """
+    Handles noise-isolated archival audio extraction via OpenAI Whisper, formats payload text,
+    and applies a Pan-African triple-tier voice fallback matrix natively via ElevenLabs.
+    """
+    payload = request.json if request.is_json else {}
+    local_filename = payload.get("filename", "audio_cache.mp3")
+    destination_language = payload.get("targetLanguage", "yo")
+
     try:
         with open(local_filename, "rb") as file_audio:
             transcript_response = client.audio.translations.create(
@@ -159,7 +148,6 @@ def transcribe_archival_audio():
 
     # PAN-AFRICAN TRIPLE-TIER VOCAL SYNTHESIS MATRIX (ELEVENLABS API)
     elevenlabs_token = os.environ.get("ELEVENLABS_API_KEY")
-    destination_language = request.json.get("targetLanguage", "yo")
     african_languages = ["yo", "sw", "zu", "xh", "ha", "af", "st", "ln", "sn", "ny", "am", "so", "om", "ar"]
 
     if elevenlabs_token and destination_language in african_languages and transcript_response.text:
