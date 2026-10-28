@@ -140,8 +140,7 @@ def transcribe_archival_audio():
         
         with open(local_filename, "ab" if chunk_idx > 0 else "wb") as f:
             f.write(raw_bytes)
-            
-                if chunk_idx == total_chunks - 1:
+        if chunk_idx == total_chunks - 1:
             with open(local_filename, "rb") as file_audio:
                 transcript_response = client.audio.translations.create(
                     model="whisper-1",
@@ -153,8 +152,10 @@ def transcribe_archival_audio():
                 os.remove(local_filename)
                 
             return jsonify({"success": True, "transcribedText": transcript_response.text})
-            
+
         return jsonify({"success": True, "message": "Fragment stashed cleanly."}), 200
+            
+            
 
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
