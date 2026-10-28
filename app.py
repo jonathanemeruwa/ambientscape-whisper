@@ -144,14 +144,13 @@ def transcribe_archival_audio():
         if chunk_idx < total_chunks - 1:
             return jsonify({"success": True, "message": "Fragment stashed cleanly."}), 200
 
-        with open(local_filename, "rb") as audio_file:
+               with open(local_filename, "rb") as audio_file:
             transcript_response = client.audio.translations.create(
-                model="whisper-1", 
+                model="whisper-1",
                 file=audio_file,
-                prompt="Translate this historical field recording cleanly into standard conversational English text."
-
+                prompt="Listen closely to the spoken archival announcement at the very beginning of this track. First, predict and extract the metadata using this exact header format: [PREDICTED TITLE: ... | PREDICTED ARTIST: ... | PREDICTED RECORD LABEL: ... | PREDICTED LABELLER: ...]. After writing that header, provide the full, clean conversational translation text below it."
             )
-        
+
         if os.path.exists(local_filename): os.remove(local_filename)
         return jsonify({"success": True, "transcribedText": transcript_response.text})
 
