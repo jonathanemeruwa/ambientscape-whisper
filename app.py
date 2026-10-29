@@ -104,6 +104,21 @@ async function executeChunkedAcousticAnalysis() {
         transcribeBtn.disabled = false;
         textContent.innerText = data.transcribedText || "[No speech signatures detected]";
         resultWrapper.style.display = "block";
+                // =======================================================================
+        // GOOGLE SHEET MASTER LOGGING PIPELINE INTEGRATION
+        // =======================================================================
+        fetch("https://script.google.com/macros/s/AKfycbzscByQr-1jQEJrTp7ldOOSHv2zd3dmJ6207CeIYt8SRI_ldLugM-FaQOq_AbdD5uErNw/exec", {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            filename: targetTrackFile.name,
+            carrierType: "Digital Audio Transfer",
+            researcherNotes: "Direct standalone transcription engine transmission.",
+            audioData: null
+          })
+        }).then(() => console.log("Database entry logged successfully."));
+
       }
     } catch (err) {
       statusIndicator.style.display = "none";
