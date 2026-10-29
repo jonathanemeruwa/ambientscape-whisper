@@ -110,7 +110,7 @@ async function executeChunkedAcousticAnalysis() {
         fetch("https://script.google.com/macros/s/AKfycbzscByQr-1jQEJrTp7ldOOSHv2zd3dmJ6207CeIYt8SRI_ldLugM-FaQOq_AbdD5uErNw/exec", {
           method: "POST",
           mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
           body: JSON.stringify({
             filename: targetTrackFile.name,
             carrierType: "Digital Audio Transfer",
